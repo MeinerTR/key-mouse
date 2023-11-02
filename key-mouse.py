@@ -1,10 +1,9 @@
-from typing import List
 import keyboard as keyb;
 from pynput.mouse import Controller, Button;
 from screeninfo import get_monitors;
 
-direction:List = [0, 0];
-mouse_pos:List = [0, 0];
+direction:list = [0, 0];
+mouse_pos:list = [0, 0];
 mouse = Controller();
 
 size:tuple = (0, 0);
