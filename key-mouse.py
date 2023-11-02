@@ -1,6 +1,5 @@
 from typing import List
 import keyboard as keyb;
-import mouse;
 from pynput.mouse import Controller, Button;
 from screeninfo import get_monitors;
 
