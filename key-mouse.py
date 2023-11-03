@@ -1,9 +1,11 @@
+from typing import List
 import keyboard as keyb;
+import mouse;
 from pynput.mouse import Controller, Button;
 from screeninfo import get_monitors;
 
-direction:list = [0, 0];
-mouse_pos:list = [0, 0];
+direction:List = [0, 0];
+mouse_pos:List = [0, 0];
 mouse = Controller();
 
 size:tuple = (0, 0);
@@ -16,27 +18,42 @@ def change_direction(x:float, y:float):
     global direction;
     direction = [x, y];
 
-def click(left:bool=False):
-    if left:
-        mouse.click(Button.left);
-    else:
-        mouse.click(Button.right);
+keyb.on_press_key("a", lambda _: mouse.click(Button.left));
+keyb.on_press_key("apostrophe", lambda _: mouse.click(Button.right));
 
-keyb.on_press_key("a", lambda _: click(True));
-keyb.on_press_key("apostrophe", lambda _: click(False));
+vert_vel:float = 0.05;
+horz_vel:float = 0.05;
 
-keyb.on_press_key("s", lambda _: change_direction(-0.05, direction[1]));
+def change_vel(value:float=4.2):
+    global horz_vel, vert_vel;
+    horz_vel = value;
+    vert_vel = value;
+    if direction[0]:
+        if direction[0] < 0:
+            change_direction(-horz_vel, direction[1]);
+        else:
+            change_direction(horz_vel, direction[1]);
+    if direction[1]:
+        if direction[1] < 0:
+            change_direction(direction[0], -vert_vel);
+        else:
+            change_direction(direction[0], vert_vel);
+
+keyb.on_press_key("space", lambda _: change_vel(0.1));
+keyb.on_release_key("space", lambda _: change_vel(0.05));
+
+keyb.on_press_key("s", lambda _: change_direction(-horz_vel, direction[1]));
 keyb.on_release_key("s", lambda _:
-    change_direction(0 if direction[0] == -0.05 else direction[0], direction[1]))
-keyb.on_press_key("d", lambda _: change_direction(0.05, direction[1]));
+    change_direction(0 if direction[0] == -horz_vel else direction[0], direction[1]))
+keyb.on_press_key("d", lambda _: change_direction(horz_vel, direction[1]));
 keyb.on_release_key("d", lambda _:
-    change_direction(0 if direction[0] == 0.05 else direction[0], direction[1]));
-keyb.on_press_key("semicolon", lambda _: change_direction(direction[0], -0.05));
+    change_direction(0 if direction[0] == horz_vel else direction[0], direction[1]));
+keyb.on_press_key("semicolon", lambda _: change_direction(direction[0], -vert_vel));
 keyb.on_release_key("semicolon", lambda _:
-    change_direction(direction[0], 0 if direction[1] == -0.05 else direction[1]));
-keyb.on_press_key("l", lambda _: change_direction(direction[0], 0.05));
+    change_direction(direction[0], 0 if direction[1] == -vert_vel else direction[1]));
+keyb.on_press_key("l", lambda _: change_direction(direction[0], vert_vel));
 keyb.on_release_key("l", lambda _:
-    change_direction(direction[0], 0 if direction[1] == 0.05 else direction[1]));
+        change_direction(direction[0], 0 if direction[1] == vert_vel else direction[1]));
 
 get_monitor_size();
 
