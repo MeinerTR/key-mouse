@@ -1,6 +1,5 @@
 from typing import List
 import keyboard as keyb;
-import mouse;
 from pynput.mouse import Controller, Button;
 from screeninfo import get_monitors;
 
@@ -18,42 +17,73 @@ def change_direction(x:float, y:float):
     global direction;
     direction = [x, y];
 
-keyb.on_press_key("a", lambda _: mouse.click(Button.left));
-keyb.on_press_key("apostrophe", lambda _: mouse.click(Button.right));
+velocity:float = 0.05;
+boost_val:float = 0.10;
+boosted_vel:float = velocity + boost_val;
 
-vert_vel:float = 0.05;
-horz_vel:float = 0.05;
+def change_speed(value:float=4.2):
+    if value < 0: return;
+    global velocity, boosted_vel;
+    velocity = value;
+    boosted_vel = velocity + boost_val;
+    print(f"New velocity: {velocity}");
+
+mouse_left:str = "a";
+mouse_right:str = "apostrophe";
+
+keyb.on_press_key("minus", lambda _: change_speed(velocity - 0.01));
+keyb.on_press_key("=", lambda _: change_speed(velocity + 0.01));
+
+lclick = keyb.on_press_key(mouse_left, lambda _: None);
+rclick = keyb.on_press_key(mouse_right, lambda _: None);
+
+mouse_activated:bool = False;
+def activate_mouse_click() -> None:
+    global lclick, rclick, mouse_activated;
+    if mouse_activated:
+        mouse_activated = False;
+        keyb.unhook_key(lclick);
+        keyb.unhook_key(rclick);
+        return;
+    mouse_activated = True;
+    lclick = keyb.on_press_key(mouse_left, lambda _: mouse.click(Button.left));
+    rclick = keyb.on_press_key(mouse_right, lambda _: mouse.click(Button.right));
+
+keyb.on_press_key("`", lambda _: activate_mouse_click())
+
+def print_key(key):
+    print(key);
+
+keyb.hook(print_key);
 
 def change_vel(value:float=4.2):
-    global horz_vel, vert_vel;
-    horz_vel = value;
-    vert_vel = value;
+    change_speed(value);
     if direction[0]:
         if direction[0] < 0:
-            change_direction(-horz_vel, direction[1]);
+            change_direction(-velocity, direction[1]);
         else:
-            change_direction(horz_vel, direction[1]);
+            change_direction(velocity, direction[1]);
     if direction[1]:
         if direction[1] < 0:
-            change_direction(direction[0], -vert_vel);
+            change_direction(direction[0], -velocity);
         else:
-            change_direction(direction[0], vert_vel);
+            change_direction(direction[0], velocity);
 
-keyb.on_press_key("space", lambda _: change_vel(0.1));
-keyb.on_release_key("space", lambda _: change_vel(0.05));
+keyb.on_press_key("space", lambda _: change_vel(boosted_vel));
+keyb.on_release_key("space", lambda _: change_vel(velocity - boost_val));
 
-keyb.on_press_key("s", lambda _: change_direction(-horz_vel, direction[1]));
+keyb.on_press_key("s", lambda _: change_direction(-velocity, direction[1]));
 keyb.on_release_key("s", lambda _:
-    change_direction(0 if direction[0] == -horz_vel else direction[0], direction[1]))
-keyb.on_press_key("d", lambda _: change_direction(horz_vel, direction[1]));
+    change_direction(0 if direction[0] == -velocity else direction[0], direction[1]))
+keyb.on_press_key("d", lambda _: change_direction(velocity, direction[1]));
 keyb.on_release_key("d", lambda _:
-    change_direction(0 if direction[0] == horz_vel else direction[0], direction[1]));
-keyb.on_press_key("semicolon", lambda _: change_direction(direction[0], -vert_vel));
+    change_direction(0 if direction[0] == velocity else direction[0], direction[1]));
+keyb.on_press_key("semicolon", lambda _: change_direction(direction[0], -velocity));
 keyb.on_release_key("semicolon", lambda _:
-    change_direction(direction[0], 0 if direction[1] == -vert_vel else direction[1]));
-keyb.on_press_key("l", lambda _: change_direction(direction[0], vert_vel));
+    change_direction(direction[0], 0 if direction[1] == -velocity else direction[1]));
+keyb.on_press_key("l", lambda _: change_direction(direction[0], velocity));
 keyb.on_release_key("l", lambda _:
-        change_direction(direction[0], 0 if direction[1] == vert_vel else direction[1]));
+        change_direction(direction[0], 0 if direction[1] == velocity else direction[1]));
 
 get_monitor_size();
 
