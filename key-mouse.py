@@ -13,13 +13,35 @@ def get_monitor_size():
     monitor = get_monitors()[0];
     size = (monitor.width, monitor.height);
 
-def change_direction(x:float, y:float):
-    global direction;
-    direction = [x, y];
+left:str = "s";
+right:str = "d";
+
+down:str = "l";
+up:str = "semicolon";
 
 velocity:float = 0.05;
 boost_val:float = 0.10;
 boosted_vel:float = velocity + boost_val;
+
+def change_direction(x:float|None, y:float|None):
+    global direction;
+
+    if x is None:
+        r:bool = keyb.is_pressed(right);
+        l:bool = keyb.is_pressed(left);
+        if l and r: pass;
+        elif l: direction[0] = -velocity;
+        elif r: direction[0] = velocity;
+        else: direction[0] = 0;
+    elif y is None:
+        d:bool = keyb.is_pressed(down);
+        u:bool = keyb.is_pressed(up);
+        if d and u: pass;
+        elif u: direction[1] = -velocity;
+        elif d: direction[1] = velocity;
+        else: direction[1] = 0;
+    else:
+        direction = [x, y];
 
 def change_speed(value:float=4.2):
     if value < 0: return;
@@ -31,8 +53,8 @@ def change_speed(value:float=4.2):
 mouse_left:str = "a";
 mouse_right:str = "apostrophe";
 
-keyb.on_press_key("minus", lambda _: change_speed(velocity - 0.01));
-keyb.on_press_key("=", lambda _: change_speed(velocity + 0.01));
+keyb.on_press_key("minus", lambda _: change_speed(velocity - 0.005));
+keyb.on_press_key("=", lambda _: change_speed(velocity + 0.005));
 
 lclick = keyb.on_press_key(mouse_left, lambda _: None);
 rclick = keyb.on_press_key(mouse_right, lambda _: None);
@@ -72,18 +94,14 @@ def change_vel(value:float=4.2):
 keyb.on_press_key("space", lambda _: change_vel(boosted_vel));
 keyb.on_release_key("space", lambda _: change_vel(velocity - boost_val));
 
-keyb.on_press_key("s", lambda _: change_direction(-velocity, direction[1]));
-keyb.on_release_key("s", lambda _:
-    change_direction(0 if direction[0] == -velocity else direction[0], direction[1]))
-keyb.on_press_key("d", lambda _: change_direction(velocity, direction[1]));
-keyb.on_release_key("d", lambda _:
-    change_direction(0 if direction[0] == velocity else direction[0], direction[1]));
-keyb.on_press_key("semicolon", lambda _: change_direction(direction[0], -velocity));
-keyb.on_release_key("semicolon", lambda _:
-    change_direction(direction[0], 0 if direction[1] == -velocity else direction[1]));
-keyb.on_press_key("l", lambda _: change_direction(direction[0], velocity));
-keyb.on_release_key("l", lambda _:
-        change_direction(direction[0], 0 if direction[1] == velocity else direction[1]));
+keyb.on_press_key(left, lambda _: change_direction(-velocity, direction[1]));
+keyb.on_release_key(left, lambda _: change_direction(None, direction[1]))
+keyb.on_press_key(right, lambda _: change_direction(velocity, direction[1]));
+keyb.on_release_key(right, lambda _: change_direction(None, direction[1]));
+keyb.on_press_key(up, lambda _: change_direction(direction[0], -velocity));
+keyb.on_release_key(up, lambda _: change_direction(direction[0], None));
+keyb.on_press_key(down, lambda _: change_direction(direction[0], velocity));
+keyb.on_release_key(down, lambda _: change_direction(direction[0], None));
 
 get_monitor_size();
 
