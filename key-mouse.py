@@ -44,7 +44,7 @@ def change_direction(x:float|None, y:float|None):
         direction = [x, y];
 
 def change_speed(value:float=4.2):
-    if value < 0: return;
+    if value < boost_val: return;
     global velocity, boosted_vel;
     velocity = value;
     boosted_vel = velocity + boost_val;
