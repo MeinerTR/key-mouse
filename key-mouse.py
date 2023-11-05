@@ -23,25 +23,23 @@ velocity:float = 0.05;
 boost_val:float = 0.10;
 boosted_vel:float = velocity + boost_val;
 
-def change_direction(x:float|None, y:float|None):
+def change_direction(x:bool=False, y:bool=False):
     global direction;
 
-    if x is None:
+    if x:
         r:bool = keyb.is_pressed(right);
         l:bool = keyb.is_pressed(left);
         if l and r: pass;
         elif l: direction[0] = -velocity;
         elif r: direction[0] = velocity;
         else: direction[0] = 0;
-    elif y is None:
-        d:bool = keyb.is_pressed(down);
-        u:bool = keyb.is_pressed(up);
-        if d and u: pass;
-        elif u: direction[1] = -velocity;
-        elif d: direction[1] = velocity;
-        else: direction[1] = 0;
-    else:
-        direction = [x, y];
+        return;
+    d:bool = keyb.is_pressed(down);
+    u:bool = keyb.is_pressed(up);
+    if d and u: pass;
+    elif u: direction[1] = -velocity;
+    elif d: direction[1] = velocity;
+    else: direction[1] = 0;
 
 def change_speed(value:float=4.2):
     if value < 0.006: return;
@@ -81,27 +79,21 @@ keyb.hook(print_key);
 def change_vel(value:float=4.2):
     change_speed(value);
     if direction[0]:
-        if direction[0] < 0:
-            change_direction(-velocity, direction[1]);
-        else:
-            change_direction(velocity, direction[1]);
+        change_direction(x=True);
     if direction[1]:
-        if direction[1] < 0:
-            change_direction(direction[0], -velocity);
-        else:
-            change_direction(direction[0], velocity);
+        change_direction(y=True);
 
 keyb.on_press_key("space", lambda _: change_vel(boosted_vel));
 keyb.on_release_key("space", lambda _: change_vel(velocity - boost_val));
 
-keyb.on_press_key(left, lambda _: change_direction(-velocity, direction[1]));
-keyb.on_release_key(left, lambda _: change_direction(None, direction[1]))
-keyb.on_press_key(right, lambda _: change_direction(velocity, direction[1]));
-keyb.on_release_key(right, lambda _: change_direction(None, direction[1]));
-keyb.on_press_key(up, lambda _: change_direction(direction[0], -velocity));
-keyb.on_release_key(up, lambda _: change_direction(direction[0], None));
-keyb.on_press_key(down, lambda _: change_direction(direction[0], velocity));
-keyb.on_release_key(down, lambda _: change_direction(direction[0], None));
+keyb.on_press_key(left, lambda _: change_direction(x=True));
+keyb.on_release_key(left, lambda _: change_direction(x=True))
+keyb.on_press_key(right, lambda _: change_direction(x=True));
+keyb.on_release_key(right, lambda _: change_direction(x=True));
+keyb.on_press_key(up, lambda _: change_direction(y=True));
+keyb.on_release_key(up, lambda _: change_direction(y=True));
+keyb.on_press_key(down, lambda _: change_direction(y=True));
+keyb.on_release_key(down, lambda _: change_direction(y=True));
 
 get_monitor_size();
 
