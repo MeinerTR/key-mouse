@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import keyboard as keyb;
 from pynput.mouse import Controller, Button;
 from screeninfo import get_monitors;
@@ -7,25 +7,30 @@ direction:List = [0, 0];
 mouse_pos:List = [0, 0];
 mouse = Controller();
 
-size:tuple = (0, 0);
-def get_monitor_size():
-    global size;
-    monitor = get_monitors()[0];
-    size = (monitor.width, monitor.height);
+print_key_log:bool = False;
 
-left:str = "s";
+left:str =  "s";
 right:str = "d";
 
-down:str = "l";
-up:str = "semicolon";
+down:str =  "l";
+up:str =    "semicolon";
 
-velocity:float = 0.05;
-boost_val:float = 0.10;
-boosted_vel:float = velocity + boost_val;
+up_left:str =   "w";
+up_right:str =  "e";
+
+down_left:str = "o";
+down_right:str= "p";
+
+increase_vel:str = "=";
+decrease_vel:str = "minus";
+
+velocity:float = 0.08;
+increase_by:float = 0.005;
+break_vel:float = 0.03;
+breaked_vel:float = velocity - break_vel;
 
 def change_direction(x:bool=False, y:bool=False):
     global direction;
-
     if x:
         r:bool = keyb.is_pressed(right);
         l:bool = keyb.is_pressed(left);
@@ -34,6 +39,7 @@ def change_direction(x:bool=False, y:bool=False):
         elif r: direction[0] = velocity;
         else: direction[0] = 0;
         return;
+    if not y: return;
     d:bool = keyb.is_pressed(down);
     u:bool = keyb.is_pressed(up);
     if d and u: pass;
@@ -42,17 +48,51 @@ def change_direction(x:bool=False, y:bool=False):
     else: direction[1] = 0;
 
 def change_speed(value:float=4.2):
-    if value < 0.006: return;
-    global velocity, boosted_vel;
+    if value < increase_by: return;
+    global velocity, breaked_vel;
     velocity = value;
-    boosted_vel = velocity + boost_val;
+    breaked_vel = velocity - break_vel;
     print(f"New velocity: {velocity}");
 
-mouse_left:str = "a";
 mouse_right:str = "apostrophe";
+mouse_left:str = "a";
 
-keyb.on_press_key("minus", lambda _: change_speed(velocity - 0.005));
-keyb.on_press_key("=", lambda _: change_speed(velocity + 0.005));
+size:tuple = (0, 0);
+def get_teleport_pos() -> tuple:
+    xdiv3:float = size[0]/3;
+    ydiv3:float = size[1]/3;
+    return  ((xdiv3, ydiv3), 
+            (size[0]-xdiv3, ydiv3),
+            (xdiv3, size[1]-ydiv3),
+            (size[0]-xdiv3, size[1]-ydiv3));
+
+def get_monitor_size():
+    global size;
+    monitor = get_monitors()[0];
+    size = (monitor.width, monitor.height);
+
+get_monitor_size();
+
+top_left:Tuple[float, float];
+top_right:Tuple[float, float];
+
+bottom_left:Tuple[float, float];
+bottom_right:Tuple[float, float];
+
+top_left, top_right, bottom_left, bottom_right = get_teleport_pos();
+
+def teleport_to(x:float=size[0]/2, y:float=size[1]/2):
+    global mouse_pos;
+    mouse_pos = [x, y];
+    mouse.position = mouse_pos[0], mouse_pos[1];
+
+keyb.on_press_key(decrease_vel, lambda _: change_speed(velocity - increase_by));
+keyb.on_press_key(increase_vel, lambda _: change_speed(velocity + increase_by));
+
+keyb.on_press_key(up_left, lambda _: teleport_to(*top_left));
+keyb.on_press_key(up_right, lambda _: teleport_to(*top_right));
+keyb.on_press_key(down_left, lambda _: teleport_to(*bottom_left));
+keyb.on_press_key(down_right, lambda _: teleport_to(*bottom_right));
 
 lclick = keyb.on_press_key(mouse_left, lambda _: None);
 rclick = keyb.on_press_key(mouse_right, lambda _: None);
@@ -71,10 +111,11 @@ def activate_mouse_click() -> None:
 
 keyb.on_press_key("`", lambda _: activate_mouse_click())
 
-def print_key(key):
-    print(key);
+if print_key_log:
+    def print_key(key):
+        print(key);
 
-keyb.hook(print_key);
+    keyb.hook(print_key);
 
 def change_vel(value:float=4.2):
     change_speed(value);
@@ -83,8 +124,8 @@ def change_vel(value:float=4.2):
     if direction[1]:
         change_direction(y=True);
 
-keyb.on_press_key("space", lambda _: change_vel(boosted_vel));
-keyb.on_release_key("space", lambda _: change_vel(velocity - boost_val));
+keyb.on_press_key("space", lambda _: change_vel(breaked_vel));
+keyb.on_release_key("space", lambda _: change_vel(velocity + break_vel));
 
 keyb.on_press_key(left, lambda _: change_direction(x=True));
 keyb.on_release_key(left, lambda _: change_direction(x=True))
@@ -94,8 +135,6 @@ keyb.on_press_key(up, lambda _: change_direction(y=True));
 keyb.on_release_key(up, lambda _: change_direction(y=True));
 keyb.on_press_key(down, lambda _: change_direction(y=True));
 keyb.on_release_key(down, lambda _: change_direction(y=True));
-
-get_monitor_size();
 
 while True:
     if direction[0] or direction[1]:
